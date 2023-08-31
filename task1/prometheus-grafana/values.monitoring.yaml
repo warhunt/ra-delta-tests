@@ -1,0 +1,23 @@
+## Using default values from https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml
+##
+grafana:
+  adminPassword: admin
+
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts: 
+      - grafana.test.k8s.home
+    paths:
+      - /
+
+prometheus:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - prometheus.test.k8s.home
+    paths:
+      - /
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false

@@ -1,0 +1,5 @@
+{
+  "ignore": ["node_modules", ".next"],
+  "watch": ["app"],
+  "exec": "npm run compose"
+}

@@ -1,0 +1,105 @@
+SEVERITY_LEVEL= [
+    CRITIRAL critical,
+    ERROR error,
+    WARNING warning,
+    INFO info,
+    UNKNOWN Unknown
+]
+
+pipeline {
+    agent any
+    options{
+        skipDefaultCheckout()
+        parallelsAlwaysFailFast()
+        disableConcurrentBuilds()
+    }
+    environment {
+        PAGER_DUTY_TOKEN=credentials('pager-duty-token')
+    }
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    echo Build stage
+
+                     For check PagerDuty
+                    currentBuild.result = FAILURE
+                    throw new Exception(Throw to stop pipeline)
+                }
+            }
+            post {
+                unsuccessful {
+                    script {
+                        ERROR_SEVERITY_LEVEL=${SEVERITY_LEVEL.ERROR}
+                        ERROR_MESSAGE=Build stage is unsuccessful
+                    }
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                script {
+                    echo Test stage
+                }
+            }
+            post {
+                unsuccessful {
+                    script {
+                        ERROR_SEVERITY_LEVEL=${SEVERITY_LEVEL.ERROR}
+                        ERROR_MESSAGE=Test stage is unsuccessful
+                    }
+                }
+            }
+        }
+        stage('Publish') {
+            steps {
+                script { 
+                    echo Publish stage
+                }
+            }
+            post {
+                unsuccessful {
+                    script {
+                        ERROR_SEVERITY_LEVEL=${SEVERITY_LEVEL.ERROR}
+                        ERROR_MESSAGE=Publish stage is unsuccessful
+                    }
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                script {
+                    echo Deploy stage
+                }
+            }
+            post {
+                unsuccessful {
+                    script {
+                        ERROR_SEVERITY_LEVEL=${SEVERITY_LEVEL.ERROR}
+                        ERROR_MESSAGE=Deploy stage is unsuccessful
+                    }
+                }
+            }
+        }
+    }
+    post {
+        unsuccessful {
+            script {
+                sh 
+                    curl --request 'POST' 
+                        --url 'httpsevents.eu.pagerduty.comv2enqueue' 
+                        --header 'Content-Type applicationjson' 
+                        --data '{
+                            payload {
+                                summary ${ERROR_MESSAGE},
+                                severity ${ERROR_SEVERITY_LEVEL},
+                                source ${env.JOB_BASE_NAME}
+                            },
+                            routing_key ${PAGER_DUTY_TOKEN},
+                            event_action trigger
+                        }'
+                
+            }
+        }
+    }
+}
